@@ -42,9 +42,16 @@ def main():
     #print "CPU Usgae = " + CPU + "%"
     #Memory = check_def.check_mem(connection)
     #print "Memory Usage = " + Memory 
+    
+    # READING NGINX CONFIGURATIONS
     nginx_config = check_def.read_nginxconfig(connection)
+    #print nginx_config
+    nginx_included_files = check_def.read_nginx_included_files(connection, nginx_config)
+    #error_log_path =  check_def.get_generator_value(check_def.find('error_log', nginx_included_files))
+    #print error_log_path
+
     if nginx_config:
-    	print nginx_config
+    	print "Nginx config is found"
     else:
     	print "Nginx config not found"
     #php_size = check_def.check_phpprocess_size(connection)

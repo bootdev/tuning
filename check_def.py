@@ -91,11 +91,18 @@ def check_disk(connection):
     list = stdout.readlines()
     return list[0]
 
+def list_path(connection, path):
+    command = "ls " +  path
+    stdin, stdout, stderr = connection.exec_command(command)
+    list = stdout.readlines()
+    #print "Listing Path = "
+    return list
+
 def check_phpprocess_size(connection):
     command = "for x in `ps -ef |grep php| grep -v grep | grep -v root | awk {'print $2'} `; do cat /proc/$x/status|grep VmSize|awk {'print $2'}; done"
     stdin, stdout, stderr = connection.exec_command(command)
     list = stdout.readlines()
-    print list
+    #print list
     results = [ float(elements.strip('\n')) for elements in list ]
     average = sum(results) / float(len(results))
     return round(average/1000,2)
@@ -139,12 +146,12 @@ def transform_config(config_value):
     import itertools
     result = {}
     for k, v in config_value:
-        print "k = "
-        print k
-        print "v = "
-        print v
+        #print "k = "
+        #print k
+        #print "v = "
+        #print v
         if type(v) is unicode:
-            print "Type(v) is unicode"
+            #print "Type(v) is unicode"
             if check_generator(find(normailizing_unicode(k),result)):
                 duplicated = get_generator_value(find(normailizing_unicode(k),result))
                 write = True
@@ -153,8 +160,8 @@ def transform_config(config_value):
                         write = False
                 if write:
                     resultant_value = duplicated + [ normailizing_unicode(v) ]
-                print "Resultant Value = "
-                print resultant_value
+                #print "Resultant Value = "
+                #print resultant_value
                 result[normailizing_unicode(k)] = resultant_value
             else:
                 result[normailizing_unicode(k)] = normailizing_unicode(v)
@@ -167,22 +174,31 @@ def transform_config(config_value):
                         # result[k[0]] = {k1: v1}
                     else:
                         for k2, v2 in v1:
-                            print "third level of dictionary"
+                            pass
+                            #print "third level of dictionary"
                 result[normailizing_unicode(k[0])] = temp_d
             else:
                 result[normailizing_unicode(k)] = normailizing_unicode(v)
-        print "result = "
-        print result
+        #print "result = "
+        #print result
     return result
 
 def read_nginxsite(nginxconf, connection):
     value = find('fuck', nginxconf)
     check_generator(value)
 
-def read_nginxconfig(connection):
-    command = "if [ -f '/etc/nginx/nginx.conf' ]; then cat /etc/nginx/nginx.conf; elif [ -h '/etc/nginx/nginx.conf' ]; then  cat `file /etc/nginx/nginx.conf | awk '{print $5}'`; else echo 'not_found'; fi"
+def read_nginxconfig(connection, filename = '/etc/nginx/nginx.conf'):
+
+    command = "if [ -f '" + filename + "' ]; then cat " + filename + "; elif [ -h '" + filename + "' ]; then  cat `file " + filename + " | awk '{print $5}'`; else echo 'not_found'; fi"
+    #print "Command = "
+    #print command
+    #print "Before running the command"
     stdin, stdout, stderr = connection.exec_command(command)
+    #print "Right after running the command"
     output = stdout.readlines()
+    #print "Finishing running command to get nginx file content"
+    #print "Output = "
+    #print output
     if output[0].strip('\n') == 'not_found':
         return False
     else:
@@ -190,13 +206,57 @@ def read_nginxconfig(connection):
         lib_path = os.path.abspath(os.path.join("./nginxparser"))
         sys.path.append(lib_path)
         import nginxparser
+        #print "Result of the file READ"
+        #print output
+        #print "remove line with hash"
+        output = [x for x in output if not normailizing_unicode(x).startswith('#')]
+        #print "remove empty lines"
+        output = [x for x in output if not normailizing_unicode(x).startswith('\n')]
+        #print "Printing output again"
+        #print output
+        if not output:
+            return False
         config_value = nginxparser.loads(''.join(output))
+        #print "********************************************************************"
         nginxconf = transform_config(config_value)
         # nginxsite = read_nginxsite(nginxconf, connection)
-        print "NGINX Config ====================================================="
-        print nginxconf
-        print "\n"
+        #print "NGINX Config ====================================================="
+        #print nginxconf
+        #print "\n"
         # print "NGINX Sites  ====================================================="
         # print nginxsite
+        return nginxconf
+    #print "Total finish of read_nginxconfig"
 
- 
+def read_nginx_included_files(connection, nginx_config):
+    included_files = find('include', nginx_config);
+    #print "List of included Files"
+    #print included_files
+    included_files = get_generator_value(included_files)
+
+    from collections import OrderedDict
+    included_files = list(OrderedDict.fromkeys(included_files))
+    included_config = {}
+    count = 0
+
+    #print "included_files list = "
+    #print included_files
+    #print "===========================GETTING included VALUES======================================"
+    for config in included_files:
+        #print "File Number " + str(count) + "==========================================================="
+        #print "File name = ",
+        #print config
+        #print "After running list path"
+        files =  list_path(connection, config)
+        #print "Files = "
+        #print files
+        for file in files:
+            #print "Before running read to nginx config"
+            temp = read_nginxconfig(connection, file.strip('\n'))
+            if temp:
+                included_config[count] = temp
+                count = count + 1
+    #print "====================================Finished ==========================================="
+    #print "Included config = "
+    #print included_config
+    return included_config
