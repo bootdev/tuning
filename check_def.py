@@ -92,6 +92,8 @@ def check_disk(connection):
     return list[0]
 
 def list_path(connection, path):
+    #print "Path = "
+    #print path
     command = "ls " +  path
     stdin, stdout, stderr = connection.exec_command(command)
     list = stdout.readlines()
@@ -112,16 +114,20 @@ def normailizing_unicode(uni):
     return unicodedata.normalize('NFKD', uni).encode('ascii','ignore')
 
 def find(key, dictionary):
-    for k, v in dictionary.iteritems():
-        if k == key:
-            yield v
-        elif isinstance(v, dict):
-            for result in find(key, v):
-                yield result
-        elif isinstance(v, list):
-            for d in v:
-                for result in find(key, d):
-                    yield result
+    if (dictionary) and (key):
+        if isinstance(dictionary, str):
+            yield dictionary
+        else:
+            for k, v in dictionary.iteritems():
+                if k == key:
+                    yield v
+                elif isinstance(v, dict):
+                    for result in find(key, v):
+                        yield result
+                elif isinstance(v, list):
+                    for d in v:
+                        for result in find(key, d):
+                            yield result
 
 def check_generator(value):
     for i in value:
@@ -145,6 +151,8 @@ def transform_config(config_value):
     from collections import defaultdict
     import itertools
     result = {}
+    #print "Inputed config values"
+    #print config_value
     for k, v in config_value:
         #print "k = "
         #print k
@@ -166,16 +174,37 @@ def transform_config(config_value):
             else:
                 result[normailizing_unicode(k)] = normailizing_unicode(v)
         else:
+            #print "Type(v) is NOT unicode"
             if type(k) is not unicode:
+                #print "Type(k) is unicode"
                 temp_d = {}
+                #print "Value to be inserted"
+                #print v
                 for k1, v1 in v:
                     if type(v1) is unicode:
                         temp_d.update({normailizing_unicode(k1):normailizing_unicode(v1)})
                         # result[k[0]] = {k1: v1}
                     else:
-                        for k2, v2 in v1:
-                            pass
+                        #print "v1 is not unicode"
+                        if k1 is unicode:
+                            for k2, v2 in v1:
+                                if type(v2) is unicode:
+                                    #print "k2 = ",
+                                    #print k2
+                                    #print "v2 = ",
+                                    #print v2
+                                    pass
+                                else: 
+                                    pass
+                                    #print "v2 is not unicode"
+                        else:
+                            #print "k1 = ",
+                            #print k1
+                            #print "v1 = ",
+                            #print v1
                             #print "third level of dictionary"
+                            k1 = " ".join(k1)
+                            temp_d.update({normailizing_unicode(k1):v1})
                 result[normailizing_unicode(k[0])] = temp_d
             else:
                 result[normailizing_unicode(k)] = normailizing_unicode(v)
@@ -188,7 +217,6 @@ def read_nginxsite(nginxconf, connection):
     check_generator(value)
 
 def read_nginxconfig(connection, filename = '/etc/nginx/nginx.conf'):
-
     command = "if [ -f '" + filename + "' ]; then cat " + filename + "; elif [ -h '" + filename + "' ]; then  cat `file " + filename + " | awk '{print $5}'`; else echo 'not_found'; fi"
     #print "Command = "
     #print command
@@ -212,11 +240,22 @@ def read_nginxconfig(connection, filename = '/etc/nginx/nginx.conf'):
         output = [x for x in output if not normailizing_unicode(x).startswith('#')]
         #print "remove empty lines"
         output = [x for x in output if not normailizing_unicode(x).startswith('\n')]
+        #print "Replacing all tabs"
+        #output = [x for x in output if not normailizing_unicode(x).replace("\t", "    ")]
         #print "Printing output again"
         #print output
+        #print "Output become string"
+        #print ''.join(output)
+        #print "Type of output"
+        #print type(output)
+        #print "Length of output"
+        #print len(output)
         if not output:
             return False
         config_value = nginxparser.loads(''.join(output))
+        #print "Print result after importing by library++++++++++++++++++++++++++++++++++++++"
+        #print config_value
+        #config_value = nginxparser.loads(output)
         #print "********************************************************************"
         nginxconf = transform_config(config_value)
         # nginxsite = read_nginxsite(nginxconf, connection)
@@ -233,8 +272,12 @@ def read_nginx_included_files(connection, nginx_config):
     #print "List of included Files"
     #print included_files
     included_files = get_generator_value(included_files)
+    #print "included_files value"
+    #print included_files
 
     from collections import OrderedDict
+    #print "Type of included_files = "
+    #print type(included_files)
     included_files = list(OrderedDict.fromkeys(included_files))
     included_config = {}
     count = 0
@@ -253,6 +296,7 @@ def read_nginx_included_files(connection, nginx_config):
         for file in files:
             #print "Before running read to nginx config"
             temp = read_nginxconfig(connection, file.strip('\n'))
+            #print temp
             if temp:
                 included_config[count] = temp
                 count = count + 1
@@ -260,3 +304,44 @@ def read_nginx_included_files(connection, nginx_config):
     #print "Included config = "
     #print included_config
     return included_config
+
+def get_phpfpm_path(connection):
+    command = 'ps -ef|grep php|grep master|grep -v grep'
+    #print "Command = "
+    #print command
+    stdin, stdout, stderr = connection.exec_command(command)
+    list = stdout.readlines()
+    #print "Output is :"
+    #print list
+    import re
+    #print normailizing_unicode(list[0])
+    result = re.search('\((.*?)\)', list[0]).group(1)
+    #print result
+    return result
+
+def get_phpfpm_conf(connection, config_file_path):
+    command = 'cat ' + config_file_path
+    stdin, stdout, stderr = connection.exec_command(command)
+    list = stdout.readlines()
+    output = list
+    output = [x for x in output if not normailizing_unicode(x).startswith(';')]
+    output = [x for x in output if not normailizing_unicode(x).startswith('\n')]
+    print output
+    included_files = [x for x in output if normailizing_unicode(x).startswith('include')]
+    print included_files
+    files = {}
+    for x in included_files:
+        path = normailizing_unicode(x).strip('\n').strip('include=')
+        print "Path = ",
+        print path
+        files = list_path(connection, path)
+        print "Files = ",
+        print files
+        #files.update();
+    print files
+    #return 
+
+
+
+
+

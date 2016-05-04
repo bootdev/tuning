@@ -34,28 +34,49 @@ def main():
     elif args.password:
         connection = check_def.connect_password(args.hostname, args.user, args.password)
 
+    ##########################################################################################################
+    # CHECKING if connection works
     #print type(connection)
     #stdin, stdout, stderr = connection.exec_command('date')
     #print stdout.readlines()
 
+    ##########################################################################################################
+    # GETTING CPU and memory values
     #CPU = check_def.check_CPU(connection)
     #print "CPU Usgae = " + CPU + "%"
     #Memory = check_def.check_mem(connection)
     #print "Memory Usage = " + Memory 
     
+    ##########################################################################################################
     # READING NGINX CONFIGURATIONS
     nginx_config = check_def.read_nginxconfig(connection)
+    #print "Reading Nginx config"
     #print nginx_config
     nginx_included_files = check_def.read_nginx_included_files(connection, nginx_config)
     #error_log_path =  check_def.get_generator_value(check_def.find('error_log', nginx_included_files))
     #print error_log_path
+    #print nginx_config
+    #print "Sub-Config files content = "
+    #print nginx_included_files
 
-    if nginx_config:
-    	print "Nginx config is found"
-    else:
-    	print "Nginx config not found"
-    #php_size = check_def.check_phpprocess_size(connection)
-    #print "PHP Process size = " + str(php_size) + "M"
+    #if nginx_config:
+    # 	print "Nginx config is found"
+    #else:
+    #	print "Nginx config not found"
+
+    ##########################################################################################################
+    # Gettting current PHP-fpm process size
+    php_size = check_def.check_phpprocess_size(connection)
+    print "PHP Process size = " + str(php_size) + "M"
+    
+    ##########################################################################################################
+    # Read php-fpm conf file
+    # First get file name
+    phpfpm_conf_file = check_def.get_phpfpm_path(connection)
+    print phpfpm_conf_file
+    # Read content
+    phpfpm_conf = check_def.get_phpfpm_conf(connection, phpfpm_conf_file)
+
     connection.close()
 
 # Running Main function
