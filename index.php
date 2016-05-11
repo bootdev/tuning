@@ -1,6 +1,6 @@
 <html>
     <head>
-        <title>IP console panel</title>
+        <title>BootDev Tuning Panel</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <!--[if lte IE 8]><script src="assets/js/html5shiv.js"></script><![endif]-->
@@ -23,8 +23,8 @@
             <!-- Main -->
             <section id="main">
                 <header>
-                    <h1>BootDev</h1><h1>Diversified&nbsp;VPN</h1>
-                    <p>IP control panel</p>
+                    <h1>BootDev</h1><h1>Tuning&nbsp;Console</h1>
+                    <!--<p>IP control panel</p>-->
                 </header>
 
 <?php
@@ -32,6 +32,7 @@ require_once 'tools/functions.php';
 
 // Prepare variables.
 // Run ec2-metadata to get instances information
+/*
 $instanceID = explode(" ",shell_exec('tools/ec2-metadata -i'))[1];
 $instanceID = preg_replace('/\s+/', '', $instanceID);
 $elasticIP = explode(" ",shell_exec('tools/ec2-metadata -v'))[1];
@@ -54,10 +55,12 @@ if ($handle) {
     }
     fclose($handle);
 }
+*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Show ICON
 // Check if action is set
+/*
 if(!empty($_REQUEST['action'])){
     $action_set = true;
 }
@@ -67,13 +70,27 @@ if(isset($action_set) && $action_set){
         include 'refresh.php';
     }
 }
+*/
+if(!empty($_REQUEST['action'])){
+    $action_set = true;
+}
+if(isset($action_set) && $action_set){
+    if($_REQUEST['action'] == 'run'){
+        include 'refresh.php';
+    }
+}
 ?>
+<!--
 <form class="form-no-horizontal-spacing" id="refreshForm" action="index.php?action=refresh" method="post">
     <button class="btn btn-primary btn-cons" type="submit" ><p>IP </p><img src="images/refresh.png" alt="Change IP" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" /></button>
 </form>
 
 <form class="form-no-horizontal-spacing" id="reloadForm" action="index.php" method="post">
     <button class="btn btn-primary btn-cons" type="submit" ><p>Check </p><img src="images/check.png" alt="Check Current IP" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" /></button>
+</form>
+-->
+<form class="form-no-horizontal-spacing" id="tune" action="index.php?action=run" method="post">
+    <button class="btn btn-primary btn-cons" type="submit" ><p>Tune! </p><img src="images/check.png" alt="Run tuning" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" /></button>
 </form>
 
 <?php
@@ -92,7 +109,7 @@ if(isset($action_set) && $action_set){
 <!--
                          <p name="clipboard-text" id="clipboard-text" class="clipboard-text">
 <?php 
-    echo $elasticIP; 
+//    echo $elasticIP; 
 ?>
                          </p>
 -->
@@ -103,10 +120,10 @@ if(isset($action_set) && $action_set){
 <div align="center"><button class="btn-md" onclick="copy();">copy</button></div>
 -->
 <button id='markup-copy'>Copy Button</button>
-<textarea id="txt"><?php echo $elasticIP; ?></textarea>
+<textarea id="txt"><?php // echo $elasticIP; ?></textarea>
 <p><i>Copy only works in Desktop Browser</i><p>
 <script>
-    var my_var = "<?php echo $elasticIP; ?>";
+    var my_var = "<?php // echo $elasticIP; ?>";
 function addMultipleListeners(element,events,handler,useCapture,args){
   if (!(events instanceof Array)){
     throw 'addMultipleListeners: '+
@@ -147,14 +164,16 @@ addMultipleListeners(document.getElementById('markup-copy'),
                 <!-- Footer -->
                 <footer id="footer">
 <?php
+/*
 $README = fopen('README.md', 'r');
 $line = fgets($README);
 fclose($f);
 echo 'console version v' . explode("=",$line)[1];
+*/
 ?>
                 <ul class="copyright">
                     <li>&copy; BootDev</li>
-                    <li>DVPN</li>
+                    <li>Tuning Demo</li>
                 </ul>
             </footer>
         </div>
