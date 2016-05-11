@@ -91,13 +91,14 @@ if(isset($action_set) && $action_set){
 -->
 <form class="form-no-horizontal-spacing" id="tune" action="index.php?action=run" method="post">
     <div>
-        <input id="hostname" type="textarea" />
+        <h6>Hostname or IP</h6>
+        <input id="hostname" type="textarea" placeholder="192.168.0.1"/>
     </div>
     <div>
-        <input id="username" type="textarea" />
+        <input id="username" type="textarea" placeholder="root"/>
     </div>
     <div>
-        <input id="password" type="textarea" />
+        <input id="password" type="textarea" placeholder="******"/>
     </div>
     <div>
         <input id="key" type="textarea" />
@@ -137,7 +138,7 @@ if(isset($action_set) && $action_set){
 -->
 <button id='markup-copy'>Copy Button</button>
 <!--<textarea id="txt"><?php // echo $elasticIP; ?></textarea>-->
-<p><i>Copy only works in Desktop Browser</i><p>
+<!--<p><i>Copy only works in Desktop Browser</i><p>-->
 <script>
     var my_var = "<?php // echo $elasticIP; ?>";
 function addMultipleListeners(element,events,handler,useCapture,args){
