@@ -24,7 +24,7 @@
             <section id="main">
                 <header>
                     <h1>BootDev</h1><h1>Tuning&nbsp;Console</h1>
-                    <!--<p>IP control panel</p>-->
+                    <p>Please input your server details for Tuning</p>
                 </header>
 
 <?php
@@ -90,10 +90,18 @@ if(isset($action_set) && $action_set){
 </form>
 -->
 <form class="form-no-horizontal-spacing" id="tune" action="index.php?action=run" method="post">
-    <input id="hostname" type="textarea" />
-    <input id="username" type="textarea" />
-    <input id="password" type="textarea" />
-    <input id="key" type="textarea" />
+    <div>
+        <input id="hostname" type="textarea" />
+    </div>
+    <div>
+        <input id="username" type="textarea" />
+    </div>
+    <div>
+        <input id="password" type="textarea" />
+    </div>
+    <div>
+        <input id="key" type="textarea" />
+    </div>
     <button class="btn btn-primary btn-cons" type="submit" ><p>Tune! </p><img src="images/check.png" alt="Run tuning" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" /></button>
 </form>
 
