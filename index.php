@@ -90,6 +90,10 @@ if(isset($action_set) && $action_set){
 </form>
 -->
 <form class="form-no-horizontal-spacing" id="tune" action="index.php?action=run" method="post">
+    <input id="hostname" type="textarea" />
+    <input id="username" type="textarea" />
+    <input id="password" type="textarea" />
+    <input id="key" type="textarea" />
     <button class="btn btn-primary btn-cons" type="submit" ><p>Tune! </p><img src="images/check.png" alt="Run tuning" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" /></button>
 </form>
 
@@ -113,14 +117,18 @@ if(isset($action_set) && $action_set){
 ?>
                          </p>
 -->
-                         <!--<img src="images/copy.png" alt="Click to copy" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" />-->
-                         <!--</button>-->
+                         <!--
+                         <img src="images/copy.png" alt="Click to copy" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" />
+                         -->
+                         <!--
+                         </button>
+                         -->
 <!--
-<textarea id="txt"><?php echo $elasticIP; ?></textarea>
+<textarea id="txt"><?php //echo $elasticIP; ?></textarea>
 <div align="center"><button class="btn-md" onclick="copy();">copy</button></div>
 -->
 <button id='markup-copy'>Copy Button</button>
-<textarea id="txt"><?php // echo $elasticIP; ?></textarea>
+<!--<textarea id="txt"><?php // echo $elasticIP; ?></textarea>-->
 <p><i>Copy only works in Desktop Browser</i><p>
 <script>
     var my_var = "<?php // echo $elasticIP; ?>";
