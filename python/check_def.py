@@ -242,9 +242,9 @@ def read_nginxconfig(connection, filename = '/etc/nginx/nginx.conf'):
     stdin, stdout, stderr = connection.exec_command(command)
     #print "Right after running the command"
     output = stdout.readlines()
-    #print "Finishing running command to get nginx file content"
-    #print "Output = "
-    #print output
+    print "Finishing running command to get nginx file content"
+    print "Output = "
+    print output
     if output[0].strip('\n') == 'not_found':
         return False
     else:
@@ -255,11 +255,16 @@ def read_nginxconfig(connection, filename = '/etc/nginx/nginx.conf'):
         #print "Result of the file READ"
         #print output
         #print "remove line with hash"
+        output = [x.strip() for x in output]
         output = [x for x in output if not normailizing_unicode(x).startswith('#')]
         #print "remove empty lines"
         output = [x for x in output if not normailizing_unicode(x).startswith('\n')]
+        #print "remove empty value"
+        output = [x for x in output if normailizing_unicode(x)]
         #print "Replacing all tabs"
         #output = [x for x in output if not normailizing_unicode(x).replace("\t", "    ")]
+        #print "Removing empty field"
+        #output = [x for x in output if not normailizing_unicode(x)]
         #print "Printing output again"
         #print output
         #print "Output become string"
@@ -270,8 +275,15 @@ def read_nginxconfig(connection, filename = '/etc/nginx/nginx.conf'):
         #print len(output)
         if not output:
             return False
+        #print "Output = "
         #print output
-        config_value = nginxparser.loads(''.join(output))
+        #print "Current file name = ", 
+        #print filename
+        config_value = {}
+        try:
+            config_value = nginxparser.loads(''.join(output))
+        except:
+            print "Please check the format of nginx config file " + filename
         #print "Print result after importing by library++++++++++++++++++++++++++++++++++++++"
         #print config_value
         #config_value = nginxparser.loads(output)
@@ -315,6 +327,7 @@ def read_nginx_included_files(connection, nginx_config):
         #print "Files = "
         #print files
         for file in files:
+            print "Running for " + file
             #print "Before running read to nginx config"
             temp = read_nginxconfig(connection, file.strip('\n'))
             #print temp
