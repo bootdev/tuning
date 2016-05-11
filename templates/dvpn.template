@@ -1,0 +1,897 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "AWS CloudFormation Template to bring up dvpn architecture, including VPC and EC2 with launch configuration that provides high availiability",
+    "Parameters" : {
+        "AZ1" : {
+            "Type": "String",
+            "Description": "the user available Availability Zone 1"
+        },
+        "AZ2" : {
+            "Type": "String",
+            "Description": "the user available Availability Zone 2"
+        },
+        "KeyName": {
+            "Type": "String",
+            "Description": "name of an existing EC2 KeyPair to enable SSH access to the web server"
+        },
+        "ProjectPrefix": {
+            "Type": "String",
+            "Description": "for EC2 instance identify"
+        },
+        "InstanceType": {
+            "Description": "EC2 instance type",
+            "Type": "String",
+            "Default": "t2.nano",
+            "AllowedValues": [
+                "t2.nano",
+                "t2.micro",
+                "m3.medium",
+                "c4.xlarge",
+                "c3.8xlarge"
+            ],
+            "ConstraintDescription": "must be a valid EC2 instance type."
+        },
+        "AttachEBSsize": {
+            "Type": "Number",
+            "Default": "8",
+            "Description": "specify size of EBS"
+        },
+        "AccessKey": {
+            "Type": "String",
+            "Description": "Access key id to download validate file and init cloud data"
+        },
+        "SecretKey": {
+            "Type": "String",
+            "Description": "Secret key id to download validate file"
+        }
+    },
+    "Conditions": {
+        "CheckInstanceForInstanceStore": {
+            "Fn::Or": [
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "InstanceType"
+                        },
+                        "c4.xlarge"
+                    ]
+                },
+                {
+                    "Fn::Equals": [
+                        {
+                            "Ref": "InstanceType"
+                        },
+                        "c3.8xlarge"
+                    ]
+                }
+            ]
+        }
+    },
+    "Mappings": {
+        "AWSInstanceType2Arch": {
+            "t2.nano": {
+                "Arch": "HVMebs"
+            },
+            "t2.micro": {
+                "Arch": "HVMebs"
+            },
+            "m3.medium": {
+                "Arch": "PVinstancestore"
+            },
+            "c4.xlarge": {
+                "Arch": "HVMebs"
+            },
+            "c3.8xlarge": {
+                "Arch": "HVMebs"
+            }
+        },
+        "AWSRegionArch2AMI": {
+            "us-east-1": {
+                "PVinstancestore": "ami-971066f2",
+                "PVebs": "ami-cf1066aa",
+                "HVMebs": "ami-e3106686"
+            },
+            "us-west-2": {
+                "PVinstancestore": "ami-bdf7e88d",
+                "PVebs": "ami-81f7e8b1",
+                "HVMebs": "ami-9ff7e8af"
+            },
+            "us-west-1": {
+                "PVinstancestore": "ami-c93aff8d",
+                "PVebs": "ami-d53aff91",
+                "HVMebs": "ami-cd3aff89"
+            },
+            "eu-west-1": {
+                "PVinstancestore": "ami-8fbe93f8",
+                "PVebs": "ami-a3be93d4",
+                "HVMebs": "ami-69b9941e"
+            },
+            "eu-central-1": {
+                "PVinstancestore": "ami-a0aeaebd",
+                "PVebs": "ami-a6aeaebb",
+                "HVMebs": "ami-daaeaec7"
+            },
+            "ap-southeast-1": {
+                "PVinstancestore": "ami-4c97821e",
+                "PVebs": "ami-50978202",
+                "HVMebs": "ami-52978200"
+            },
+            "ap-northeast-1": {
+                "PVinstancestore": "ami-a42fb8a4",
+                "PVebs": "ami-9c2fb89c",
+                "HVMebs": "ami-9a2fb89a"
+            },
+            "ap-northeast-2":{
+                "PVinstancestore": "ami-4118d72f",
+                "HVMebs": "ami-249b554a"
+            },
+            "ap-southeast-2": {
+                "PVinstancestore": "ami-851856bf",
+                "PVebs": "ami-c71856fd",
+                "HVMebs": "ami-c11856fb"
+            },
+            "sa-east-1": {
+                "PVinstancestore": "ami-010c991c",
+                "PVebs": "ami-370c992a",
+                "HVMebs": "ami-3b0c9926"
+            },
+            "cn-north-1": {
+                "PVinstancestore": "ami-68b22e51",
+                "PVebs": "ami-54b22e6d",
+                "HVMebs": "ami-6cb22e55"
+            }
+        }
+    },
+    "Resources": {
+        "VPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": "10.0.0.0/16",
+                "EnableDnsSupport" : true,
+                "EnableDnsHostnames" : true,
+                "Tags": [
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackName"
+                        }
+                    },
+                    {
+                        "Key": "Network",
+                        "Value": "Public"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "CustomVpc"
+                    }
+                ]
+            }
+        },
+        "VpcSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Open up SSH access and all ports to itself",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "VpcId" : {"Ref" : "VPC"}
+            }
+        },
+        "VPCSecurityGroupRule": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+			"DependsOn" : "VpcSecurityGroup",
+            "Properties": {
+                "GroupId" : {"Ref":"VpcSecurityGroup"},
+				"IpProtocol" : "-1",
+				"SourceSecurityGroupId" : {"Ref": "VpcSecurityGroup"}
+					   
+            }
+        },
+	    "VPCSecurityInetGroupRule": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+			"DependsOn" : "VpcSecurityGroup",
+            "Properties": {
+                "GroupId" : {"Ref":"VpcSecurityGroup"},
+				"IpProtocol" : "-1",
+				"CidrIp" : "10.0.0.0/16"		   
+            }
+        },
+        "PublicSubnetOne": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "AvailabilityZone" : {"Ref" : "AZ1"},
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": "10.0.0.0/24",
+                "Tags": [
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackId"
+                        }
+                    },
+                    {
+                        "Key": "Network",
+                        "Value": "Public"
+                    }
+                ]
+            }
+        },
+        "PublicSubnetTwo": {
+            "Type": "AWS::EC2::Subnet",
+            "DependsOn": "PublicSubnetOne",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "AvailabilityZone" : {"Ref" : "AZ2"},
+                "CidrBlock": "10.0.2.0/24",
+                "Tags": [
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackId"
+                        }
+                    },
+                    {
+                        "Key": "Network",
+                        "Value": "Public"
+                    }
+                ]
+            }
+        },
+        "InternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackId"
+                        }
+                    },
+                    {
+                        "Key": "Network",
+                        "Value": "Public"
+                    }
+                ]
+            }
+        },
+        "AttachGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "InternetGatewayId": {
+                    "Ref": "InternetGateway"
+                }
+            }
+        },
+        "PublicRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "Tags": [
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackId"
+                        }
+                    },
+                    {
+                        "Key": "Network",
+                        "Value": "Public"
+                    }
+                ]
+            }
+        },
+        "PublicRouteOne": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "AttachGateway",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "InternetGateway"
+                }
+            }
+        },
+        "PubliSubnetOneRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "PublicSubnetOne"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                }
+            }
+        },
+        "PublicSubnetTwoRouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "PublicSubnetTwo"
+                },
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                }
+            }
+        },
+        "PublicNetworkAcl": {
+            "Type": "AWS::EC2::NetworkAcl",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "Tags": [
+                    {
+                        "Key": "Application",
+                        "Value": {
+                            "Ref": "AWS::StackId"
+                        }
+                    },
+                    {
+                        "Key": "Network",
+                        "Value": "Public"
+                    }
+                ]
+            }
+        },
+        "InboundHTTPPublicOneNetworkAclEntry": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "PublicNetworkAcl"
+                },
+                "RuleNumber": "100",
+                "Protocol": "6",
+                "RuleAction": "allow",
+                "Egress": "false",
+                "CidrBlock": "0.0.0.0/0",
+                "PortRange": {
+                    "From": "80",
+                    "To": "80"
+                }
+            }
+        },
+        "InboundHTTPSSHPublicOneNetworkAclEntry": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "PublicNetworkAcl"
+                },
+                "RuleNumber": "120",
+                "Protocol": "-1",
+                "RuleAction": "allow",
+                "CidrBlock" : "0.0.0.0/0",
+                "Egress": "false"
+            }
+        },
+        "InboundDynamicPortsPublicOneNetworkAclEntry": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "PublicNetworkAcl"
+                },
+                "RuleNumber": "101",
+                "Protocol": "6",
+                "RuleAction": "allow",
+                "Egress": "false",
+                "CidrBlock": "0.0.0.0/0",
+                "PortRange": {
+                    "From": "1024",
+                    "To": "65535"
+                }
+            }
+        },
+        "OutboundHTTPPublicOneNetworkAclEntry": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "PublicNetworkAcl"
+                },
+                "RuleNumber": "100",
+                "Protocol": "6",
+                "RuleAction": "Allow",
+                "Egress": "true",
+                "CidrBlock": "0.0.0.0/0",
+                "PortRange": {
+                    "From": "80",
+                    "To": "80"
+                }
+            }
+        },
+        "OutBoundDynamicPortPublicOneNetworkAclEntry": {
+            "Type": "AWS::EC2::NetworkAclEntry",
+            "Properties": {
+                "NetworkAclId": {
+                    "Ref": "PublicNetworkAcl"
+                },
+                "RuleNumber": "150",
+                "Protocol": "-1",
+                "RuleAction": "allow",
+                "Egress": "true",
+                "CidrBlock": "0.0.0.0/0"
+            }
+        },
+        "PublicSubnetOneNetworkAclAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "PublicSubnetOne"
+                },
+                "NetworkAclId": {
+                    "Ref": "PublicNetworkAcl"
+                }
+            }
+        },
+        "PublicSubnetTwoNetworkAclAssociation": {
+            "Type": "AWS::EC2::SubnetNetworkAclAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "PublicSubnetTwo"
+                },
+                "NetworkAclId": {
+                    "Ref": "PublicNetworkAcl"
+                }
+            }
+        },
+        "EC2SecurityGroupRuleWev": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "DependsOn" : "VpcSecurityGroup",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "VpcSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "80",
+                "ToPort": "80",
+                "CidrIp": "10.0.0.0/16"
+            }
+        },
+        "EC2SecurityGroupRulePPTP": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "DependsOn" : "VpcSecurityGroup",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "VpcSecurityGroup"
+                },
+                "IpProtocol": "tcp",
+                "FromPort": "1723",
+                "ToPort": "1723",
+                "CidrIp": "0.0.0.0/0"
+            }
+        },
+        "PPTPLaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "DependsOn" : "VpcSecurityGroup",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/home/ec2-user/.aws/config": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[default]\n",
+                                            "aws_access_key_id = ",
+                                            {
+                                                "Ref": "AccessKey"
+                                            },
+                                            "\n",
+                                            "aws_secret_access_key = ",
+                                            {
+                                                "Ref": "SecretKey"
+                                            },
+                                            "\n",
+                                            "region  = ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "mode": "000640",
+                                "owner": "ec2-user",
+                                "group": "ec2-user"
+                            },
+                            "/root/.aws/config": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[default]\n",
+                                            "aws_access_key_id = ",
+                                            {
+                                                "Ref": "AccessKey"
+                                            },
+                                            "\n",
+                                            "aws_secret_access_key = ",
+                                            {
+                                                "Ref": "SecretKey"
+                                            },
+                                            "\n",
+                                            "region  = ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "mode": "000640",
+                                "owner": "root",
+                                "group": "root"
+                            },
+                            "/root/.aws/vpc.txt": {
+                                "content": { "Ref": "VPC" },
+                                "mode": "000640",
+                                "owner": "root",
+                                "group": "root"
+                            }                            
+                        },
+                        "commands": {
+                            "01mkdir": {
+                                "command": "mkdir -p /home/ec2-user/tools;mkdir -p /var/app",
+                                "cwd": "/home/ec2-user",
+                                "ignoreErrors": "true"
+                            },
+                            "02installpptp": {
+                                "command": "yum install ppp -y;yum localinstall http://poptop.sourceforge.net/yum/stable/packages/pptpd-1.4.0-1.el6.x86_64.rpm -y",
+                                "cwd": "/home/ec2-user/tools"
+                            },
+                            "10installec2metadata": {
+                                "command": "n=0;until [ $n -ge 5 ];do wget http://s3.amazonaws.com/ec2metadata/ec2-metadata; [ $? -eq 0 ] && break;n=$[$n+1];sleep 15;done; chmod u+x ./ec2-metadata",
+                                "cwd": "/home/ec2-user/tools"
+                            },
+                            "11confignodeip": {
+                                "command": "tempVar=$( /home/ec2-user/tools/ec2-metadata -o | cut -d' ' -f2 );echo localip $tempVar >> /etc/pptpd.conf;echo remoteip    10.0.0.100-150 >> /etc/pptpd.conf"
+                            },
+                            "12configpptpgoogledns": {
+                                "command": "echo ms-dns    8.8.8.8 >> /etc/ppp/options.pptpd;echo ms-dns    8.8.4.4 >> /etc/ppp/options.pptpd"
+                            },
+                            "13configpptpbaidudns": {
+                                "command": "echo ms-dns    180.76.76.76 >> /etc/ppp/options.pptpd;echo ms-dns    114.114.114.114 >> /etc/ppp/options.pptpd"
+                            },
+                            "14configpptpencrpty": {
+                                "command": "echo require-mschap-v2 >> /etc/ppp/options.pptpd;echo require-mppe-128 >> /etc/ppp/options.pptpd"
+                            },
+                            "20inputpptpcredentials": {
+                                "command": "echo 'username        pptpd    password               *' >> /etc/ppp/chap-secrets"
+                            },
+                            "30enablenetworksetting": {
+                                "command": "/bin/sed -i 's/net.ipv4.ip_forward.*/net.ipv4.ip_forward = 1/' /etc/sysctl.conf;/sbin/sysctl -p || :"
+                            },
+                            "31enableiptablesnatconfigipforward": {
+                                "command": "/sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE;echo /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE >> /etc/rc.local"
+                            },
+                            "32enableiptablesnatconfigallow1723": {
+                                "command": "#/sbin/iptables -A INPUT -p tcp --dport 1723 -j ACCEPT;#echo /sbin/iptables -A INPUT -p tcp --dport 1723 -j ACCEPT >> /etc/rc.local"
+                            },
+                            "33enableiptablesnatconfiggre": {
+                                "command": "#/sbin/iptables -A INPUT -p gre -j ACCEPT;#echo /sbin/iptables -A INPUT -p gre -j ACCEPT >> /etc/rc.local"
+                            },
+                            "40reloadiptables": {
+                                "command": "/sbin/service iptables save;/sbin/service iptables restart"
+                            },
+                            "50startpptpservice": {
+                                "command": "/sbin/service pptpd start;chkconfig pptpd on"
+                            },
+                            "60prepareconsolepackage": {
+                                "command": "yum install git nginx php55 php55-fpm -y"
+                            },
+                            "61configphpfpm": {
+                                "command": "n=0;until [ $n -ge 5 ];do /bin/sed -i 's/apache/nginx/g' /etc/php-fpm.d/www.conf; [ $? -eq 0 ] && break;n=$[$n+1];sleep 10;done"
+                            },
+                            "62clonerepo": {
+                                "command": "git clone https://github.com/chankongching/dvpn_ui.git /var/www/html;chown -R nginx:nginx /var/www/html"
+                            },
+                            "63confignginx": {
+                                "command": "n=0;until [ $n -ge 5 ];do cp /var/www/html/config/default.conf /etc/nginx/conf.d/default.conf; [ $? -eq 0 ] && break;n=$[$n+1];sleep 10;done"
+                            },
+                            "70puttingrequiredinfo": {
+                                "command": "cp /root/.aws/vpc.txt /var/www/html/data/vpc.txt;cp /root/.aws/config /var/www/html/data/config"
+                            },
+                            "71changeownership": {
+                                "command": "chown nginx:nginx /var/www/html/data/vpc.txt;chown nginx:nginx /var/www/html/data/config"
+                            },
+                            "80reloadallpacakges": {
+                                "command": "for x in nginx php-fpm pptpd;do service $x restart;done"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AssociatePublicIpAddress": true,
+                "SecurityGroups": [
+                    {
+                        "Ref": "VpcSecurityGroup"
+                    }
+                ],
+                "BlockDeviceMappings": [
+                    {
+                        "Fn::If": [
+                            "CheckInstanceForInstanceStore",
+                            {
+                                "DeviceName": "/dev/xvda",
+                                "Ebs": {
+                                    "VolumeSize": { "Ref": "AttachEBSsize" },
+                                    "VolumeType": "standard"
+                                }
+                            },
+                            {
+                                "DeviceName": "/dev/sdl",
+                                "VirtualName": "ephemeral0"
+                            }
+                        ]
+                    }
+                ],
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "AWSRegionArch2AMI",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        {
+                            "Fn::FindInMap": [
+                                "AWSInstanceType2Arch",
+                                {
+                                    "Ref": "InstanceType"
+                                },
+                                "Arch"
+                            ]
+                        }
+                    ]
+                },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash -v\n",
+                                "export AWS_CONFIG_FILE=/home/ec2-user/.aws/config\n",
+                                "export HOME=/root\n",
+                                "service iptables stop\n",
+                                "service ip6tables stop\n",
+                                "chkconfig iptables off \n",
+                                "chkconfig ip6tables off\n",
+                                "function error_exit\n",
+                                "{\n",
+                                "/opt/aws/bin/cfn-signal -e 1 --region ",
+                                {
+                                  "Ref": "AWS::Region"
+                                },
+                                " -r \"$1\" '",
+                                {
+                                    "Ref": "PPTPserverWaitHandle"
+                                },
+                                "'\n",
+                                " exit 1 \n",
+                                "}\n",
+                                "/opt/aws/bin/cfn-init -v --region ",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "  -s ",
+                                {
+                                    "Ref": "AWS::StackId"
+                                },
+                                " -r PPTPLaunchConfig",
+                                " --access-key ",
+                                {
+                                    "Ref": "AccessKey"
+                                },
+                                " --secret-key ",
+                                {
+                                    "Ref": "SecretKey"
+                                },
+                                " --region ",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                " || error-exit 'failed to run cfn init'\n",
+                                "#if well,signal success\n",
+                                "/opt/aws/apitools/cfn-init/bin/cfn-signal -e $? --region ",
+                                {
+                                  "Ref": "AWS::Region"
+                                },
+                                " -r 'Chef client configration' '",
+                                {
+                                    "Ref": "PPTPserverWaitHandle"
+                                },
+                                "'\n"
+                            ]
+                        ]
+                    }
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                }
+            }
+        },
+        "AWSLoadBalancerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "DependsOn" : "VpcSecurityGroup",
+            "Properties": {
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "80",
+                        "FromPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "GroupDescription": "Load Balancer Security Group",
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "ToPort": "80",
+                        "FromPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "ElasticLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "DependsOn" : "PublicSubnetTwo",
+            "Properties": {
+                "Subnets": [
+                    {
+                        "Ref": "PublicSubnetOne"
+                    },
+                    {
+                        "Ref": "PublicSubnetTwo"
+                    }
+                ],
+                "Listeners": [
+                    {
+                        "LoadBalancerPort": "80",
+                        "InstancePort": "80",
+                        "Protocol": "HTTP"
+                    }
+                ],
+                "SecurityGroups": [
+                    {
+                        "Ref": "AWSLoadBalancerSecurityGroup"
+                    }
+                ],
+                "HealthCheck": {
+                    "Timeout": "5",
+                    "Target": "TCP:80",
+                    "Interval": "30",
+                    "HealthyThreshold": "3",
+                    "UnhealthyThreshold": "5"
+                }
+            }
+        },
+        "PPTPAutoScalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "DependsOn" : "VpcSecurityGroup",
+            "Properties": {
+                "AvailabilityZones":[ 
+                    {"Ref": "AZ1"}
+                ],
+                "VPCZoneIdentifier": [
+                    {
+                        "Ref": "PublicSubnetOne"
+                    }
+                ],
+                "Cooldown": "1800",
+                "MinSize": "1",
+                "MaxSize": "1",
+                "LaunchConfigurationName": {
+                    "Ref": "PPTPLaunchConfig"
+                },
+                "LoadBalancerNames": [
+                    {
+                        "Ref": "ElasticLoadBalancer"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "",
+                                [
+                                    {
+                                        "Ref": "ProjectPrefix"
+                                    },
+                                    "PPTPserver"
+                                ]
+                            ]
+                        },
+                        "PropagateAtLaunch": true
+                    }
+                ]
+            }
+        },
+        "PPTPserverWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "PPTPserverWaitCondition": {
+            "Type": "AWS::CloudFormation::WaitCondition",
+            "DependsOn": "PPTPAutoScalingGroup",
+            "Properties": {
+                "Handle": {
+                    "Ref": "PPTPserverWaitHandle"
+                },
+                "Timeout": "1800",
+                "Count": "1"
+            }
+        }
+    },
+    "Outputs": {
+        "VpcId": {
+            "Description": "the id of vpc you created",
+            "Value": {
+                "Ref": "VPC"
+            }
+        },
+		"VpcSecurityGroup":{
+			"Description": "the security group id in this VPC",
+			"Value" : {"Ref":"VpcSecurityGroup"}
+		},
+        "PublicSubnetOne": {
+            "Description": "the subnet one id ",
+            "Value": {
+				"Fn::Join" : ["",[
+					{"Ref" : "PublicSubnetOne"},
+					":",
+					{"Ref" : "AZ1"}
+				]]
+                
+            }
+        },
+        "PublicSubnetTwo": {
+            "Description": "the subnet two id",
+            "Value": {
+				"Fn::Join" : ["",[
+					{"Ref" : "PublicSubnetTwo"},
+					":",
+					{"Ref" : "AZ2"}
+				]]
+            }
+        },
+        "LoadBalancerDNS": {
+            "Description": "the DNS of load balancer",
+            "Value": {
+                "Fn::GetAtt": [
+                    "ElasticLoadBalancer",
+                    "DNSName"
+                ]
+            }
+        },
+        "LoadBalancerHostZoneID": {
+            "Description": "the HostZoneID of load balancer",
+            "Value": {
+                "Fn::GetAtt": [
+                    "ElasticLoadBalancer",
+                    "CanonicalHostedZoneNameID"
+                ]
+            }
+        }
+    }
+}
