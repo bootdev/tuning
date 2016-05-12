@@ -23,8 +23,8 @@
             <!-- Main -->
             <section id="main">
                 <header>
-                    <img src="images/bootdev.png">
-                    <h1>BootDev</h1><h1>Tuning&nbsp;Console</h1>
+                    <img src="images/bootdev.png" width="200px">
+                    <!--<h1>BootDev</h1>--><h1>Tuning&nbsp;Console</h1>
                     <p>Please input your server details for Tuning</p>
                 </header>
 
