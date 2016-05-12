@@ -84,14 +84,14 @@ write_log('POSTED_data',$_POST);
         //include 'refresh.php';
         if (count($_POST) > 0 && isset($_POST['hostname']) && isset($_POST['username'])){
             write_log('Post_exists', $_POST);
-            if(isset($_POST['password']) && isset($_POST['key'])){
+            if(!empty($_POST['password']) && !empty($_POST['key'])){
                 write_log('Command_Check', 'Both Key and password exists');
                 $msg = "Please provide only one between password and key";
-            } elseif ($_POST['password']) {
+            } elseif (!empty($_POST['password'])) {
                 write_log('Command_Check', 'Using password to run');
                 $response = shell_exec('python ./python/check.py -h ' . $_POST['hostname'] . ' -u ' . $_POST['username'] . ' -p ' . $_POST['password']);
                 write_log('Python_response', $response);
-            } elseif ($_POST['key']) {
+            } elseif (!empty($_POST['key']) {
                 write_log('Command_Check', 'Using Key to run');
                 $key = fopen("key.pem", "w");
                 fwrite($key, $_POST['key']);
