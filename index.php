@@ -90,21 +90,19 @@ if(isset($action_set) && $action_set){
 </form>
 -->
 <form class="form-no-horizontal-spacing" id="tune" action="index.php?action=run" method="post">
-    <div>
-      <p>
+    <div align="right">
         <h6 style='display:inline;'>Hostname or IP</h6>
         <input style='display:inline;' id="hostname" type="textarea" placeholder="192.168.0.1"/>
-      </p>
     </div>
-    <div>
+    <div align="right">
         <h6 style='display:inline;'>Username to login</h6>
         <input style='display:inline;' id="username" type="textarea" placeholder="root"/>
     </div>
-    <div>
+    <div align="right">
         <h6 style='display:inline;'>Password</h6>
         <input style='display:inline;'id="password" type="textarea" placeholder="******"/>
     </div>
-    <div>
+    <div align="right">
         <h6 style='display:inline;'>ssh key content</h6>
         <input id="key" type="textarea" rows="10" cols="50" />
     </div>
