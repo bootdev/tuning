@@ -131,17 +131,17 @@ def main():
 
     #result = check_def.find('access_log',nginx_included_files)
     #print check_def.get_generator_value(result)
-    print "----------------------------------------------------"
-    print ""
-    print "Finalized nginx web server recommendation"
+    #print "----------------------------------------------------"
+    #print ""
+    #print "Finalized nginx web server recommendation"
     print nginx_recommend
 
     #print ""
     #print "Recommended value generation"
     # Calculate the recommended NGINX Site specific values
-    print "----------------------------------------------------"
-    print ""
-    print "Finalized nginx site specific recommendation"
+    #print "----------------------------------------------------"
+    #print ""
+    #print "Finalized nginx site specific recommendation"
     #print nginx_included_files
     site_recommend = {}
     check_def.put_recommend_value(connection, 'off', 'access_log',nginx_included_files, site_recommend);
@@ -149,13 +149,13 @@ def main():
     #print "----------------------------------------------------"
     print site_recommend
 
-    print "----------------------------------------------------"
-    print ""
-    print "Recommended value generation"
+    #print "----------------------------------------------------"
+    #print ""
+    #print "Recommended value generation"
     # Calculate the recommended php webserver values
     phpfpm_recommend = {}
-    print phpfpm_conf
-    print "----------------------------------------------------"
+    #print phpfpm_conf
+    #print "----------------------------------------------------"
     #print ""
     # Transform to dictionary
     phpfpm_conf = check_def.list2dict(phpfpm_conf)
@@ -179,9 +179,9 @@ def main():
     check_def.put_recommend_value(connection, str(pm_start_servers), 'pm.start_servers', phpfpm_conf, phpfpm_recommend)
     check_def.put_recommend_value(connection, str(pm_min_spare_servers), 'pm.min_spare_servers', phpfpm_conf, phpfpm_recommend)
     check_def.put_recommend_value(connection, str(500), 'pm.max_requests', phpfpm_conf, phpfpm_recommend)
-    print "PHP fpm recommendation result"
+    #print "PHP fpm recommendation result"
     print phpfpm_recommend
-    print "----------------------------------------------------"
+    #print "----------------------------------------------------"
     php_ini = check_def.get_phpini(connection)
     #print php_ini
     
@@ -195,10 +195,10 @@ def main():
     check_def.put_recommend_value(connection, 'On', 'short_open_tag', php_ini, php_ini_recommend)
     check_def.put_recommend_value(connection, 'Off', 'register_globals', php_ini, php_ini_recommend)
     check_def.put_recommend_value(connection, 'Off', 'expose_php', php_ini, php_ini_recommend)
-    print "PHP ini recommended values"
+    #print "PHP ini recommended values"
     print php_ini_recommend
     # END of program
-    print "----------------------------------------------------"
+    #print "----------------------------------------------------"
     connection.close()
 
 # Running Main function

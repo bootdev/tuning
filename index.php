@@ -30,7 +30,7 @@
 
 <?php
 require_once 'tools/functions.php';
-
+$msg = '';
 // Prepare variables.
 // Run ec2-metadata to get instances information
 /*
@@ -72,12 +72,26 @@ if(isset($action_set) && $action_set){
     }
 }
 */
+/*
 if(!empty($_REQUEST['action'])){
     $action_set = true;
 }
+*/
 if(isset($action_set) && $action_set){
     if($_REQUEST['action'] == 'run'){
-        include 'refresh.php';
+        //include 'refresh.php';
+        if (count($_POST) > 0 && isset($_POST['hostname']) && isset($_POST['username'])){
+            if(isset($_POST['password']) && isset($_POST['key'])){
+                $msg = "Please provide only one between password and key";
+            } elseif ($_POST['password']) {
+                $response = shell_exec('python ./python/check.py -h ' . $_POST['hostname'] . ' -u ' . $_POST['username'] . ' -p ' . $_POST['password'])
+                error_log($response, 0)
+            } {
+
+            }
+        } else {
+            $msg = "Please input hostname and username";
+        }
     }
 }
 ?>
