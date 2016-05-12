@@ -815,6 +815,11 @@
 					border-left: 0;
 				}
 
+/* Warning */
+    #warning {
+    	color: red;
+    }
+
 /* Wrapper */
 
 	#wrapper {

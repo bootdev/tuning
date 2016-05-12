@@ -99,16 +99,16 @@ if(isset($action_set) && $action_set){
         <input style='display:inline;' id="username" type="textarea" placeholder="root"/>
     </div>
     <div align="right">
-        <h5 style='display:inline;' color="red">*</h5>
+        <h5 style='display:inline;' color="red" class="warning">*</h5>
         <h6 style='display:inline;'>Password</h6>
         <input style='display:inline;'id="password" type="textarea" placeholder="******"/>
     </div>
     <div align="right">
-        <h5 style='display:inline;' color="red">*</h5>
+        <h5 style='display:inline;' color="red" class="warning">*</h5>
         <h6 style='display:inline;'>ssh key content</h6>
         <input id="key" type="textarea" rows="10" cols="50" />
     </div>
-    <div color="red">* input either one</div>
+    <div color="red" class="warning">* input either one</div>
     <p>
         <button class="btn btn-primary btn-cons" type="submit" ><p>Tune! </p><img src="images/check.png" alt="Run tuning" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" /></button>
     </p>
