@@ -91,8 +91,10 @@ if(isset($action_set) && $action_set){
 -->
 <form class="form-no-horizontal-spacing" id="tune" action="index.php?action=run" method="post">
     <div>
-        <h6>Hostname or IP</h6>
-        <input id="hostname" type="textarea" placeholder="192.168.0.1"/>
+      <p>
+        <h6 style='display:inline;'>Hostname or IP</h6>
+        <input style='display:inline;' id="hostname" type="textarea" placeholder="192.168.0.1"/>
+      </p>
     </div>
     <div>
         <input id="username" type="textarea" placeholder="root"/>
@@ -111,7 +113,9 @@ if(isset($action_set) && $action_set){
 // Show INFO
 //echo "Instance ID = " . $instanceID . '<br>';
 ?>
+<!--
                          <b>Current IP: </b>
+-->
                          <!--
                          <button id="target-to-copy" data-clipboard-target="clipboard-text">
                          -->
