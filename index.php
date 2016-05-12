@@ -89,8 +89,10 @@ write_log('POSTED_data',$_POST);
                 $msg = "Please provide only one between password and key";
             } elseif (!empty($_POST['password'])) {
                 write_log('Command_Check', 'Using password to run');
-                $response = shell_exec('python ./python/check.py -h ' . $_POST['hostname'] . ' -u ' . $_POST['username'] . ' -p ' . $_POST['password']);
+                $command = 'python ./python/check.py -h ' . $_POST['hostname'] . ' -u ' . $_POST['username'] . ' -p ' . $_POST['password'];
+                $response = shell_exec($command);
                 write_log('Python_response', $response);
+                write_log("Pythong command", $command);
             } elseif (!empty($_POST['key'])) {
                 write_log('Command_Check', 'Using Key to run');
                 $key = fopen("key.pem", "w");
