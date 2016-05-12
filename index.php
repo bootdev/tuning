@@ -74,20 +74,24 @@ if(isset($action_set) && $action_set){
 */
 
 if(!empty($_REQUEST['action'])){
+    write_log('Action', $_REQUEST);
     $action_set = true;
 }
 
 if(isset($action_set) && $action_set){
+write_log('POSTED_data',$_POST);
     if($_REQUEST['action'] == 'run'){
         //include 'refresh.php';
         if (count($_POST) > 0 && isset($_POST['hostname']) && isset($_POST['username'])){
             if(isset($_POST['password']) && isset($_POST['key'])){
                 $msg = "Please provide only one between password and key";
             } elseif ($_POST['password']) {
-                $response = shell_exec('python ./python/check.py -h ' . $_POST['hostname'] . ' -u ' . $_POST['username'] . ' -p ' . $_POST['password'])
-                error_log($response, 0)
-            } {
-
+                $response = shell_exec('python ./python/check.py -h ' . $_POST['hostname'] . ' -u ' . $_POST['username'] . ' -p ' . $_POST['password']);
+                write_log('Python_response', $response);
+            } elseif ($_POST['key']) {
+                $key = fopen("key.pem", "w");
+                fwrite($key, $_POST['key']);
+                fclose($key);
             }
         } else {
             $msg = "Please input hostname and username";
@@ -107,21 +111,21 @@ if(isset($action_set) && $action_set){
 <form class="form-no-horizontal-spacing" id="tune" action="index.php?action=run" method="post">
     <div align="right">
         <h6 style='display:inline;'>Hostname or IP</h6>
-        <input style='display:inline;' id="hostname" type="textarea" placeholder="192.168.0.1"/>
+        <input style='display:inline;' name="hostname" type="textarea" placeholder="192.168.0.1"/>
     </div>
     <div align="right">
         <h6 style='display:inline;'>Username to login</h6>
-        <input style='display:inline;' id="username" type="textarea" placeholder="root"/>
+        <input style='display:inline;' name="username" type="textarea" placeholder="root"/>
     </div>
     <div align="right">
         <h5 style='display:inline;' color="red" class="warning">*</h5>
         <h6 style='display:inline;'>Password</h6>
-        <input style='display:inline;'id="password" type="textarea" placeholder="******"/>
+        <input style='display:inline;' name="password" type="textarea" placeholder="******"/>
     </div>
     <div align="right">
         <h5 style='display:inline;' color="red" class="warning">*</h5>
         <h6 style='display:inline;'>ssh key content</h6>
-        <input id="key" type="textarea" rows="10" cols="50" />
+        <input name="key" type="textarea" rows="10" cols="50" />
     </div>
     <div color="red" >* input either one</div>
     <p>
