@@ -92,7 +92,7 @@ write_log('POSTED_data',$_POST);
                 $command = 'python ./python/check.py -h ' . $_POST['hostname'] . ' -u ' . $_POST['username'] . ' -p ' . $_POST['password'];
                 $response = shell_exec($command);
                 write_log('Python_response', $response);
-                write_log("Pythong command", $command);
+                write_log("Pythong_command", $command);
             } elseif (!empty($_POST['key'])) {
                 write_log('Command_Check', 'Using Key to run');
                 $key = fopen("key.pem", "w");
