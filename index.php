@@ -23,9 +23,7 @@
             <!-- Main -->
             <section id="main">
                 <header>
-                    <!--<img src="images/bootdev.png">--></img><!--<h1>BootDev</h1>-->
-                    <h1>BootDev</h1>
-                    <h1>Tuning&nbsp;Console</h1>
+                    <h1>BootDev</h1><h1>Tuning&nbsp;Console</h1>
                     <p>Please input your server details for Tuning</p>
                 </header>
 
@@ -110,7 +108,7 @@ if(isset($action_set) && $action_set){
         <h6 style='display:inline;'>ssh key content</h6>
         <input id="key" type="textarea" rows="10" cols="50" />
     </div>
-    <div color="red" class="warning">* input either one</div>
+    <div color="red" >* input either one</div>
     <p>
         <button class="btn btn-primary btn-cons" type="submit" ><p>Tune! </p><img src="images/check.png" alt="Run tuning" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" /></button>
     </p>
@@ -151,7 +149,6 @@ if(isset($action_set) && $action_set){
 <!--<button id='markup-copy'>Copy Button</button>-->
 <!--<textarea id="txt"><?php // echo $elasticIP; ?></textarea>-->
 <!--<p><i>Copy only works in Desktop Browser</i><p>-->
-<!--
 <script>
     var my_var = "<?php // echo $elasticIP; ?>";
 function addMultipleListeners(element,events,handler,useCapture,args){
@@ -184,7 +181,6 @@ function handler(e) {
 addMultipleListeners(document.getElementById('markup-copy'),
                      ['touchstart','click'],handler,false);
 </script>
--->
 <?php
 //echo "VPC = " . $vpc_id . '<br>';
 //echo "aws_access_key_id = " . $aws_credentials['aws_access_key_id'] . '<br>';
@@ -210,14 +206,12 @@ echo 'console version v' . explode("=",$line)[1];
         </div>
         <!-- Scripts -->
         <!--[if lte IE 8]><script src="assets/js/respond.min.js"></script><![endif]-->
-        <!--
         <script>
             if ('addEventListener' in window) {
                 window.addEventListener('load', function() { document.body.className = document.body.className.replace(/\bis-loading\b/, ''); });
                 document.body.className += (navigator.userAgent.match(/(MSIE|rv:11\.0)/) ? ' is-ie' : '');
             }
         </script>
-        -->
         <!--
         <script>
             var clientTarget = new ZeroClipboard( $("#target-to-copy"), {
