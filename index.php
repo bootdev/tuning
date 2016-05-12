@@ -99,12 +99,12 @@ if(isset($action_set) && $action_set){
         <input style='display:inline;' id="username" type="textarea" placeholder="root"/>
     </div>
     <div align="right">
-        <h5 color="red">*</h5>
+        <h5 style='display:inline;' color="red">*</h5>
         <h6 style='display:inline;'>Password</h6>
         <input style='display:inline;'id="password" type="textarea" placeholder="******"/>
     </div>
     <div align="right">
-        <h5 color="red">*</h5>
+        <h5 style='display:inline;' color="red">*</h5>
         <h6 style='display:inline;'>ssh key content</h6>
         <input id="key" type="textarea" rows="10" cols="50" />
     </div>
