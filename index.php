@@ -108,7 +108,7 @@ if(isset($action_set) && $action_set){
         <h6 style='display:inline;'>ssh key content</h6>
         <input id="key" type="textarea" rows="10" cols="50" />
     </div>
-    <div color="red">* input either one</div>>
+    <div color="red">* input either one</div>
     <p>
         <button class="btn btn-primary btn-cons" type="submit" ><p>Tune! </p><img src="images/check.png" alt="Run tuning" style="max-width:100%;max-height:100%;height:80%;vertical-align:middle;position: relative;top: -3px;" /></button>
     </p>
@@ -146,7 +146,7 @@ if(isset($action_set) && $action_set){
 <textarea id="txt"><?php //echo $elasticIP; ?></textarea>
 <div align="center"><button class="btn-md" onclick="copy();">copy</button></div>
 -->
-<button id='markup-copy'>Copy Button</button>
+<!--<button id='markup-copy'>Copy Button</button>-->
 <!--<textarea id="txt"><?php // echo $elasticIP; ?></textarea>-->
 <!--<p><i>Copy only works in Desktop Browser</i><p>-->
 <script>
