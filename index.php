@@ -72,11 +72,11 @@ if(isset($action_set) && $action_set){
     }
 }
 */
-/*
+
 if(!empty($_REQUEST['action'])){
     $action_set = true;
 }
-*/
+
 if(isset($action_set) && $action_set){
     if($_REQUEST['action'] == 'run'){
         //include 'refresh.php';
